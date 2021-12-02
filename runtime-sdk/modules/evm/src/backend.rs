@@ -249,7 +249,9 @@ impl<'c, C: Context, Cfg: Config> ApplyBackend for Backend<'c, C, Cfg> {
         );
 
         // Emit logs as events.
+        println!("LOOOOOOOOOOGS");
         for log in logs {
+            println!("log: {:?}", log);
             self.ctx.get_mut().emit_event(crate::Event::Log {
                 address: log.address.into(),
                 topics: log.topics.iter().map(|&topic| topic.into()).collect(),

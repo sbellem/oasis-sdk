@@ -557,6 +557,7 @@ impl<Cfg: Config> Module<Cfg> {
             .ok_or(Error::InsufficientBalance)?;
 
         let (vals, logs) = executor.into_state().deconstruct();
+
         backend.apply(vals, logs, true);
 
         core::Module::use_tx_gas(ctx, gas_used)?;
