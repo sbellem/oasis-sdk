@@ -380,6 +380,12 @@ impl Module {
                 // Warning: we don't report success or failure. If the call fails, we still report
                 // how much gas it uses while it fails.
                 let gas_used = *tx_ctx.value::<u64>(CONTEXT_KEY_GAS_USED).or_default();
+                println!(
+                    "Simulate: Gas used: {:?}, extra_gas: {:?}, added: {:?}",
+                    gas_used,
+                    extra_gas,
+                    gas_used + extra_gas
+                );
                 Ok(gas_used + extra_gas)
             })
         })

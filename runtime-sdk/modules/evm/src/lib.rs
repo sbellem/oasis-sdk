@@ -9,7 +9,9 @@ pub mod types;
 use std::collections::BTreeMap;
 
 use evm::{
-    executor::stack::{MemoryStackState, PrecompileFn, StackExecutor, StackSubstateMetadata},
+    executor::stack::{
+        MemoryStackState, PrecompileFn, StackExecutor, StackState, StackSubstateMetadata,
+    },
     Config as EVMConfig,
 };
 use once_cell::sync::Lazy;
@@ -540,7 +542,27 @@ impl<Cfg: Config> Module<Cfg> {
 
         // Run EVM and process the result.
         let (exit_reason, exit_value) = f(&mut executor, gas_limit);
-        let exit_value = process_evm_result(exit_reason, exit_value)?;
+        let exit_value = process_evm_result(exit_reason, exit_value);
+        if exit_value.is_err() {
+            println!(
+                "Exit value ERR: {:?}, gas_limit: {:?}, estimate_gas: {:?}, used_gas: {:?}, total_used_gas: {:?}, remaining: {:?}",
+                exit_value,
+                gas_limit,
+                estimate_gas,
+                executor.used_gas(),
+            executor.state().metadata().gasometer().total_used_gas(),
+            executor.state().metadata().gasometer().gas(),
+            );
+        }
+        println!(
+            "Exited!: gas_limit: {:?}, estimate_gas: {:?}, used_gas: {:?}, total_used_gas: {:?}, remaining: {:?}",
+            gas_limit,
+            estimate_gas,
+            executor.used_gas(),
+            executor.state().metadata().gasometer().total_used_gas(),
+            executor.state().metadata().gasometer().gas(),
+        );
+        let exit_value = exit_value?;
 
         let gas_used = executor.used_gas();
 
@@ -623,7 +645,11 @@ impl<Cfg: Config> module::MethodHandler for Module<Cfg> {
         body: cbor::Value,
     ) -> module::DispatchResult<cbor::Value, CallResult> {
         match method {
-            "evm.Create" => module::dispatch_call(ctx, body, Self::tx_create),
+            "evm.Create" => {
+                let gas_limit: u64 = core::Module::remaining_tx_gas(ctx);
+                println!("CREATE gas limit: {:?}", gas_limit);
+                module::dispatch_call(ctx, body, Self::tx_create)
+            }
             "evm.Call" => module::dispatch_call(ctx, body, Self::tx_call),
             _ => module::DispatchResult::Unhandled(body),
         }
