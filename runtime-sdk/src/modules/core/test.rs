@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use oasis_core_runtime::types::BATCH_WEIGHT_LIMIT_QUERY_METHOD;
+use oasis_runtime_sdk_macros::sdk_derive;
 
 use crate::{
     context::{BatchContext, Context, Mode, TxContext},
@@ -174,12 +175,14 @@ impl GasWasterModule {
 
 impl module::Module for GasWasterModule {
     const NAME: &'static str = "gaswaster";
+    const VERSION: u32 = 42;
     type Error = std::convert::Infallible;
     type Event = ();
     type Parameters = ();
 }
 
-impl module::MethodHandler for GasWasterModule {
+#[sdk_derive(MethodHandler)]
+impl GasWasterModule {
     fn dispatch_call<C: TxContext>(
         ctx: &mut C,
         method: &str,
@@ -195,6 +198,13 @@ impl module::MethodHandler for GasWasterModule {
             }
             _ => module::DispatchResult::Unhandled(body),
         }
+    }
+
+    fn supported_methods() -> Option<Vec<types::MethodHandlerInfo>> {
+        Some(vec![types::MethodHandlerInfo {
+            kind: types::MethodHandlerKind::Call,
+            name: Self::METHOD_WASTE_GAS.to_string(),
+        }])
     }
 }
 
@@ -807,4 +817,65 @@ fn test_emit_events() {
     assert_eq!(TestEvent { i: 3 }, events[2], "expected events emitted");
     assert_eq!(TestEvent { i: 1 }, events[3], "expected events emitted");
     assert_eq!(TestEvent { i: 0 }, events[4], "expected events emitted");
+}
+
+/// Constructs a BTreeMap using a `btreemap! { key => value, ... }` syntax.
+macro_rules! btreemap {
+    // allow trailing comma
+    ( $($key:expr => $value:expr,)+ ) => (btreemap!($($key => $value),+));
+    ( $($key:expr => $value:expr),* ) => {
+        {
+            let mut m = BTreeMap::new();
+            $( m.insert($key.into(), $value); )*
+            m
+        }
+    };
+}
+
+#[test]
+fn test_module_info() {
+    use types::{MethodHandlerInfo, MethodHandlerKind};
+
+    let mut mock = mock::Mock::default();
+    let mut ctx = mock.create_ctx_for_runtime::<GasWasterRuntime>(Mode::CheckTx);
+
+    // Set bogus params on the core module; we want to see them reflected in response to the `runtime_info()` query.
+    let core_params = Parameters {
+        max_batch_gas: 123,
+        max_tx_signers: 4,
+        max_multisig_signers: 567,
+        ..Default::default()
+    };
+    Core::set_params(ctx.runtime_state(), core_params.clone());
+
+    let info = Core::query_runtime_info(&mut ctx, ()).unwrap();
+    assert_eq!(
+        info,
+        types::RuntimeInfoResponse {
+            runtime_version: Version::new(0, 0, 0),
+            state_version: 0,
+            modules: btreemap! {
+                "core" =>
+                    types::ModuleInfo {
+                        version: 1,
+                        params: cbor::to_vec(core_params),
+                        methods: Some(vec![
+                            MethodHandlerInfo { kind: MethodHandlerKind::Query, name: "core.EstimateGas".to_string() },
+                            MethodHandlerInfo { kind: MethodHandlerKind::Query, name: "core.CheckInvariants".to_string() },
+                            MethodHandlerInfo { kind: MethodHandlerKind::Query, name: "core.CallDataPublicKey".to_string() },
+                            MethodHandlerInfo { kind: MethodHandlerKind::Query, name: "core.MinGasPrice".to_string() },
+                            MethodHandlerInfo { kind: MethodHandlerKind::Query, name: "core.RuntimeInfo".to_string() }
+                        ])
+                    },
+                "gaswaster" =>
+                    types::ModuleInfo {
+                        version: 42,
+                        params: cbor::to_vec(()),
+                        methods: Some(vec![
+                            MethodHandlerInfo { kind: types::MethodHandlerKind::Call, name: "test.WasteGas".to_string() }
+                        ]),
+                    },
+            }
+        }
+    );
 }

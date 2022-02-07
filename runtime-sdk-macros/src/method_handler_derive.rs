@@ -1,6 +1,7 @@
 use crate::{emit_compile_error, generators as gen};
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::parse_quote;
 
 /// Given an `impl MyModule` block, produces an `impl MethodHandler for MyModule`.
 /// See `sdk_derive()` in lib.rs for details.
@@ -169,12 +170,37 @@ pub fn derive_method_handler(impl_block: syn::ItemImpl) -> TokenStream {
         }
     };
 
+    let supported_methods_impl = {
+        let (handler_names, handler_kinds): (Vec<syn::Expr>, Vec<syn::Path>) = handlers
+            .iter()
+            .filter_map(|h| h.handler.as_ref())
+            // `prefetch` is an implementation detail of `call` handlers, so we don't list them
+            .filter(|h| h.attrs.kind != HandlerKind::Prefetch)
+            .map(|h| (h.attrs.rpc_name.clone(), h.attrs.kind.as_sdk_ident()))
+            .unzip();
+        if handler_names.is_empty() {
+            quote! {}
+        } else {
+            quote! {
+                fn supported_methods() -> Option<Vec<core_types::MethodHandlerInfo>> {
+                    Some(vec![ #(
+                        core_types::MethodHandlerInfo {
+                            kind: #handler_kinds,
+                            name: #handler_names.to_string(),
+                        },
+                    )* ])
+                }
+            }
+        }
+    };
+
     gen::wrap_in_const(quote! {
         use #sdk_crate::{
           self as sdk,
           cbor,
           error::Error as _,
           module::{DispatchResult, CallResult},
+          modules::core::types as core_types,
           types::message::MessageResult
         };
 
@@ -185,6 +211,7 @@ pub fn derive_method_handler(impl_block: syn::ItemImpl) -> TokenStream {
             #dispatch_call_impl
             #dispatch_query_impl
             #dispatch_message_result_impl
+            #supported_methods_impl
         }
 
         impl#module_generics #module_ty {
@@ -214,6 +241,20 @@ enum HandlerKind {
     Query,
     MessageResult,
     Prefetch,
+}
+impl HandlerKind {
+    fn as_sdk_ident(&self) -> syn::Path {
+        match self {
+            HandlerKind::Call => parse_quote!(core_types::MethodHandlerKind::Call),
+            HandlerKind::Query => parse_quote!(core_types::MethodHandlerKind::Query),
+            HandlerKind::MessageResult => {
+                parse_quote!(core_types::MethodHandlerKind::MessageResult)
+            }
+            HandlerKind::Prefetch => {
+                unimplemented!("prefetch cannot be expressed in core::types::MethodHandlerKind")
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -274,6 +315,7 @@ mod tests {
                   self as sdk, cbor,
                   error::Error as _,
                   module::{CallResult, DispatchResult},
+                  modules::core::types as core_types,
                   types::message::MessageResult,
               };
       }
@@ -356,6 +398,18 @@ mod tests {
                                     _ => DispatchResult::Unhandled(body),
                                 }
                             }
+                            fn supported_methods() -> Option<Vec<core_types::MethodHandlerInfo>> {
+                                Some(vec![
+                                    core_types::MethodHandlerInfo {
+                                        kind: core_types::MethodHandlerKind::Call,
+                                        name: "my_module.MyCall".to_string(),
+                                    },
+                                    core_types::MethodHandlerInfo {
+                                        kind: core_types::MethodHandlerKind::Call,
+                                        name: "my_module.MyOtherCall".to_string(),
+                                    },
+                                ])
+                            }
                         }
                         impl<C: Cfg> MyModule<C> {
                             #[handler(prefetch = "my_module.MyCall")]
@@ -398,6 +452,12 @@ mod tests {
                                     _ => DispatchResult::Unhandled(args),
                                 }
                             }
+                            fn supported_methods() -> Option<Vec<core_types::MethodHandlerInfo>> {
+                                Some(vec![core_types::MethodHandlerInfo {
+                                    kind: core_types::MethodHandlerKind::Query,
+                                    name: RPC_NAME_OF_MY_QUERY.to_string(),
+                                }])
+                            }
                         }
                         impl<C: Cfg> MyModule<C> {
                             #[handler(query = RPC_NAME_OF_MY_QUERY)]
@@ -435,6 +495,12 @@ mod tests {
                                     "my_module.MyMC" => module::dispatch_query(ctx, args, Self::my_method_call),
                                     _ => DispatchResult::Unhandled(args),
                                 }
+                            }
+                            fn supported_methods() -> Option<Vec<core_types::MethodHandlerInfo>> {
+                                Some(vec![core_types::MethodHandlerInfo {
+                                    kind: core_types::MethodHandlerKind::Query,
+                                    name: "my_module.MyMC".to_string(),
+                                }])
                             }
                         }
                         impl<C: Cfg> MyModule<C> {
