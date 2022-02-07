@@ -12,3 +12,7 @@ type EstimateGasQuery struct {
 	// Tx is the unsigned transaction to estimate.
 	Tx *types.Transaction `json:"tx"`
 }
+
+type RuntimeInfoResponse struct {
+	ModuleVersion uint32 `json:"module_version"`
+}
