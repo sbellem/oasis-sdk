@@ -48,6 +48,8 @@
             ];
           };
 
+          defaultPackage = self.packages.${system}.test-runtime-simple-consensus;
+
           devShell = mkShell {
             inherit LIBCLANG_PATH rust_toolchain;
 
