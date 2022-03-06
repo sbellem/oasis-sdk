@@ -1,0 +1,51 @@
+# NOTE: This name appears in GitHub's Checks API and in workflow's status badge.
+name: nix-build
+
+# Trigger the workflow when:
+on:
+  push:
+    branches:
+      - main
+      - stable/*
+      - nix*
+
+  pull_request:
+    branches:
+      - main
+      - stable/*
+      - nix*
+
+  # Besides pushes on the branches above, also check every day at 00:00 UTC.
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+
+  build-test-runtime-simple-consensus:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: test-runtime-simple-consensus
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v16
+        with:
+          install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.7.0pre20220225_fd4b693/install
+      - run: nix --version
+      - run: nix build .#test-runtime-simple-consensus
+      - run: nix build --rebuild .#test-runtime-simple-consensus
+      - run: shasum -a 512256 -b result/bin/test-runtime-simple-consensus
+      - run: sha256sum result/bin/test-runtime-simple-consensus
+
+      - name: Shasum 512256 check
+        run: |
+          echo "b35158095b9adf850f0128caa73efb0969945960a7485dcb07ca4189369d649d *result/bin/test-runtime-simple-consensus" | shasum --algorithm 512256 --binary --strict --check
+      - name: Sha256sum  check
+        run: |
+          echo "ad3c689ca33040eea803be98fe2e2871f5fb997adc3ba0dc41f4303cddefea87 *result/bin/test-runtime-simple-consensus" | sha256sum --strict --check
+      - run: nix flake check
+      - run: nix flake metadata
+      - run: nix flake show
+      - run: ls -l result

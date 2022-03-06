@@ -28,3 +28,7 @@ cli/cli
 cli/oasis
 client-sdk/ts-web/core/reflect-go/reflect-go
 tools/orc/orc
+
+# nix build
+result
+result-*
