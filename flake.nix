@@ -17,7 +17,7 @@
     rust-overlay,
     flake-utils,
   }:
-    flake-utils.lib.eachDefaultSystem (
+    flake-utils.lib.eachSystem ["x86_64-linux"] (
       system: let
         overlays = [(import rust-overlay)];
         pkgs = import nixpkgs {
