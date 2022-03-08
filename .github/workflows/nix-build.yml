@@ -57,6 +57,42 @@ jobs:
       - run: nix flake show
       - run: ls -l result
 
+  build-test-runtime-simple-evm:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: test-runtime-simple-evm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v16
+        with:
+          install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.7.0pre20220225_fd4b693/install
+
+      - name: Install cachix
+        uses: cachix/cachix-action@v10
+        with:
+          name: initc3
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - run: nix --version
+      - run: nix build .#test-runtime-simple-evm
+      - run: nix build --rebuild .#test-runtime-simple-evm
+      - run: sha256sum result/bin/test-runtime-simple-evm
+      - run: shasum -a 512256 -b result/bin/test-runtime-simple-evm
+
+      - name: Sha256sum  check
+        run: |
+          echo "0566b5d0ed9286bb5c26850a0c5240ff0445c66e199e82a9fd05ad915bd0fc99 *result/bin/test-runtime-simple-evm" | sha256sum --strict --check
+      - name: Shasum 512256 check
+        run: |
+          echo "afb36090da148e3125db82e72551846c66608f008621d316b8dce8f762114e1e *result/bin/test-runtime-simple-evm" | shasum --algorithm 512256 --binary --strict --check
+      - run: nix flake check
+      - run: nix flake metadata
+      - run: nix flake show
+      - run: ls -l result
+
   build-test-runtime-simple-keyvalue:
     # NOTE: This name appears in GitHub's Checks API.
     name: test-runtime-simple-keyvalue

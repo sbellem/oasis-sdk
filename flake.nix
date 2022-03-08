@@ -53,14 +53,38 @@
             ];
           };
 
-        simple-consensus = {
+        # tests pkgs
+        # TODO
+        test-runtime-benchmarking = {
+          pname = "test-runtime-benchmarking";
+          version = "0.1.0";
+          cargoSha256 = pkgs.lib.fakeSha256;
+          buildAndTestSubdir = "./tests/runtimes/benchmarking";
+        };
+
+        test-runtime-simple-consensus = {
           pname = "test-runtime-simple-consensus";
           version = "0.1.0";
           cargoSha256 = "sha256-y62hFHBEC+El1CW5jHzvsBNCVwjkEvyzTwc4gZOBBY8=";
           buildAndTestSubdir = "./tests/runtimes/simple-consensus";
         };
 
-        simple-keyvalue = {
+        # TODO
+        test-runtime-simple-contracts = {
+          pname = "test-runtime-simple-contracts";
+          version = "0.1.0";
+          cargoSha256 = pkgs.lib.fakeSha256;
+          buildAndTestSubdir = "./tests/runtimes/simple-contracts";
+        };
+
+        test-runtime-simple-evm = {
+          pname = "test-runtime-simple-evm";
+          version = "0.1.0";
+          cargoSha256 = "sha256-ZWo62j+hZDiEFrVnMsOOdqEfTl3evOD+jqgCSMDycRI=";
+          buildAndTestSubdir = "./tests/runtimes/simple-evm";
+        };
+
+        test-runtime-simple-keyvalue = {
           pname = "test-runtime-simple-keyvalue";
           version = "0.1.0";
           cargoSha256 = "sha256-nA77+U/Pt5a1dNM70wkO6m+OCbfyM/jLSEG/swGs24U=";
@@ -108,8 +132,11 @@
         };
       in
         with pkgs; {
-          packages.test-runtime-simple-consensus = mkPkg simple-consensus;
-          packages.test-runtime-simple-keyvalue = mkPkg simple-keyvalue;
+          packages.test-runtime-benchmarking = mkPkg test-runtime-benchmarking;
+          packages.test-runtime-simple-consensus = mkPkg test-runtime-simple-consensus;
+          packages.test-runtime-simple-contracts = mkPkg test-runtime-simple-contracts;
+          packages.test-runtime-simple-evm = mkPkg test-runtime-simple-evm;
+          packages.test-runtime-simple-keyvalue = mkPkg test-runtime-simple-keyvalue;
           packages.runtime-sdk = mkPkg runtime-sdk;
           packages.runtime-sdk-contracts = mkPkg runtime-sdk-contracts;
           packages.runtime-sdk-macros = mkPkg runtime-sdk-macros;
