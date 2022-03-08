@@ -21,6 +21,79 @@ on:
 
 jobs:
 
+  build-test-runtime-benchmarking:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: test-runtime-simple-benchmarking
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v16
+        with:
+          install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.7.0pre20220225_fd4b693/install
+
+      - name: Install cachix
+        uses: cachix/cachix-action@v10
+        with:
+          name: initc3
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - run: nix --version
+      - run: nix build .#test-runtime-simple-benchmarking
+      - run: nix build --rebuild .#test-runtime-simple-benchmarking
+      - run: sha256sum result/bin/test-runtime-simple-benchmarking
+      - run: shasum -a 512256 -b result/bin/test-runtime-simple-benchmarking
+
+      - name: Sha256sum  check
+        run: |
+          echo "e5b0bccf56754be443a3a9dbeee931c4f1fdc1ef219a62a65ed6eb855fb0fc59 *result/bin/test-runtime-simple-benchmarking" | sha256sum --strict --check
+      - name: Shasum 512256 check
+        run: |
+          echo "3133f3187c0ba0997333cd5688f5beece70db3e7fa3f4e7e56e756cb18c26926 *result/bin/test-runtime-simple-benchmarking" | shasum --algorithm 512256 --binary --strict --check
+      - run: nix flake check
+      - run: nix flake metadata
+      - run: nix flake show
+      - run: ls -l result
+
+  build-test-runtime-simple-contracts:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: test-runtime-simple-contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v16
+        with:
+          install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.7.0pre20220225_fd4b693/install
+
+      - name: Install cachix
+        uses: cachix/cachix-action@v10
+        with:
+          name: initc3
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - run: nix --version
+      - run: nix build .#test-runtime-simple-contracts
+      - run: nix build --rebuild .#test-runtime-simple-contracts
+      - run: sha256sum result/bin/test-runtime-simple-contracts
+      - run: shasum -a 512256 -b result/bin/test-runtime-simple-contracts
+
+      - name: Sha256sum  check
+        run: |
+          echo "92d342db797369a119f9828713749570d56921e4517ee5a880c0c88ffaf22741 *result/bin/test-runtime-simple-contracts" | sha256sum --strict --check
+      - name: Shasum 512256 check
+        run: |
+          echo "4a6104c401e15a9d2318ea120e7185de072a4ca4672e7c6aee0acf5261cbddd1 *result/bin/test-runtime-simple-contracts" | shasum --algorithm 512256 --binary --strict --check
+
+      - run: nix flake check
+      - run: nix flake metadata
+      - run: nix flake show
+      - run: ls -l result
+
   build-test-runtime-simple-consensus:
     # NOTE: This name appears in GitHub's Checks API.
     name: test-runtime-simple-consensus
@@ -43,15 +116,16 @@ jobs:
       - run: nix --version
       - run: nix build .#test-runtime-simple-consensus
       - run: nix build --rebuild .#test-runtime-simple-consensus
-      - run: shasum -a 512256 -b result/bin/test-runtime-simple-consensus
       - run: sha256sum result/bin/test-runtime-simple-consensus
+      - run: shasum -a 512256 -b result/bin/test-runtime-simple-consensus
 
-      - name: Shasum 512256 check
-        run: |
-          echo "b35158095b9adf850f0128caa73efb0969945960a7485dcb07ca4189369d649d *result/bin/test-runtime-simple-consensus" | shasum --algorithm 512256 --binary --strict --check
       - name: Sha256sum  check
         run: |
           echo "ad3c689ca33040eea803be98fe2e2871f5fb997adc3ba0dc41f4303cddefea87 *result/bin/test-runtime-simple-consensus" | sha256sum --strict --check
+      - name: Shasum 512256 check
+        run: |
+          echo "b35158095b9adf850f0128caa73efb0969945960a7485dcb07ca4189369d649d *result/bin/test-runtime-simple-consensus" | shasum --algorithm 512256 --binary --strict --check
+
       - run: nix flake check
       - run: nix flake metadata
       - run: nix flake show
@@ -88,6 +162,7 @@ jobs:
       - name: Shasum 512256 check
         run: |
           echo "afb36090da148e3125db82e72551846c66608f008621d316b8dce8f762114e1e *result/bin/test-runtime-simple-evm" | shasum --algorithm 512256 --binary --strict --check
+
       - run: nix flake check
       - run: nix flake metadata
       - run: nix flake show
@@ -124,6 +199,7 @@ jobs:
       - name: Shasum 512256 check
         run: |
           echo "dc1302781283aec44a54240c4b97e5d87823d972c7337ddc6b4ac7f12e1a3ff8 *result/bin/test-runtime-simple-keyvalue" | shasum --algorithm 512256 --binary --strict --check
+
       - run: nix flake check
       - run: nix flake metadata
       - run: nix flake show

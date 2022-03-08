@@ -54,11 +54,10 @@
           };
 
         # tests pkgs
-        # TODO
         test-runtime-benchmarking = {
           pname = "test-runtime-benchmarking";
           version = "0.1.0";
-          cargoSha256 = pkgs.lib.fakeSha256;
+          cargoSha256 = "sha256-lD/J3gld2SKQn+HGP5HLyjdHpKAC4XyUtVmbqZZT908=";
           buildAndTestSubdir = "./tests/runtimes/benchmarking";
         };
 
@@ -69,11 +68,10 @@
           buildAndTestSubdir = "./tests/runtimes/simple-consensus";
         };
 
-        # TODO
         test-runtime-simple-contracts = {
           pname = "test-runtime-simple-contracts";
           version = "0.1.0";
-          cargoSha256 = pkgs.lib.fakeSha256;
+          cargoSha256 = "sha256-MX/j1IIOQyryZKEDHwgJzLupWtNiM3FhFxhn1DPhpbk=";
           buildAndTestSubdir = "./tests/runtimes/simple-contracts";
         };
 
