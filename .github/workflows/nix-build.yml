@@ -49,3 +49,32 @@ jobs:
       - run: nix flake metadata
       - run: nix flake show
       - run: ls -l result
+
+  build-test-runtime-simple-keyvalue:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: test-runtime-simple-keyvalue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v16
+        with:
+          install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.7.0pre20220225_fd4b693/install
+      - run: nix --version
+      - run: nix build .#test-runtime-simple-keyvalue
+      - run: nix build --rebuild .#test-runtime-simple-keyvalue
+      - run: sha256sum result/bin/test-runtime-simple-keyvalue
+      - run: shasum -a 512256 -b result/bin/test-runtime-simple-keyvalue
+
+      - name: Sha256sum  check
+        run: |
+          echo "b8c197048eed4b537045dac90d3d3fd3ce753f1c27b09a0cfb2d5a6c04afb6f4 *result/bin/test-runtime-simple-keyvalue" | sha256sum --strict --check
+      - name: Shasum 512256 check
+        run: |
+          echo "dc1302781283aec44a54240c4b97e5d87823d972c7337ddc6b4ac7f12e1a3ff8 *result/bin/test-runtime-simple-keyvalue" | shasum --algorithm 512256 --binary --strict --check
+      - run: nix flake check
+      - run: nix flake metadata
+      - run: nix flake show
+      - run: ls -l result
