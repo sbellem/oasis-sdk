@@ -41,17 +41,17 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - run: nix --version
-      - run: nix build .#test-runtime-simple-benchmarking
-      - run: nix build --rebuild .#test-runtime-simple-benchmarking
-      - run: sha256sum result/bin/test-runtime-simple-benchmarking
-      - run: shasum -a 512256 -b result/bin/test-runtime-simple-benchmarking
+      - run: nix build .#test-runtime-benchmarking
+      - run: nix build --rebuild .#test-runtime-benchmarking
+      - run: sha256sum result/bin/test-runtime-benchmarking
+      - run: shasum -a 512256 -b result/bin/test-runtime-benchmarking
 
       - name: Sha256sum  check
         run: |
-          echo "e5b0bccf56754be443a3a9dbeee931c4f1fdc1ef219a62a65ed6eb855fb0fc59 *result/bin/test-runtime-simple-benchmarking" | sha256sum --strict --check
+          echo "e5b0bccf56754be443a3a9dbeee931c4f1fdc1ef219a62a65ed6eb855fb0fc59 *result/bin/test-runtime-benchmarking" | sha256sum --strict --check
       - name: Shasum 512256 check
         run: |
-          echo "3133f3187c0ba0997333cd5688f5beece70db3e7fa3f4e7e56e756cb18c26926 *result/bin/test-runtime-simple-benchmarking" | shasum --algorithm 512256 --binary --strict --check
+          echo "3133f3187c0ba0997333cd5688f5beece70db3e7fa3f4e7e56e756cb18c26926 *result/bin/test-runtime-benchmarking" | shasum --algorithm 512256 --binary --strict --check
       - run: nix flake check
       - run: nix flake metadata
       - run: nix flake show
@@ -84,7 +84,8 @@ jobs:
 
       - name: Sha256sum  check
         run: |
-          echo "92d342db797369a119f9828713749570d56921e4517ee5a880c0c88ffaf22741 *result/bin/test-runtime-simple-contracts" | sha256sum --strict --check
+          #echo "92d342db797369a119f9828713749570d56921e4517ee5a880c0c88ffaf22741 *result/bin/test-runtime-simple-contracts" | sha256sum --strict --check
+          echo "2b2ac7bf3e9aa57e772bd5156317922180d75a5b1392eff9ec4f58049017d734 *result/bin/test-runtime-simple-contracts" | sha256sum --strict --check
       - name: Shasum 512256 check
         run: |
           echo "4a6104c401e15a9d2318ea120e7185de072a4ca4672e7c6aee0acf5261cbddd1 *result/bin/test-runtime-simple-contracts" | shasum --algorithm 512256 --binary --strict --check
