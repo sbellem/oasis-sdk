@@ -92,6 +92,12 @@ jobs:
           #echo "4a6104c401e15a9d2318ea120e7185de072a4ca4672e7c6aee0acf5261cbddd1 *result/bin/test-runtime-simple-contracts" | shasum --algorithm 512256 --binary --strict --check
           echo "c79aaf930d0f2b6fe0e329ebc54bf103dae65230c0771701313eb25996fcbf04 *result/bin/test-runtime-simple-contracts" | shasum --algorithm 512256 --binary --strict --check
 
+      - name: Upload binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifact-test-runtime-simple-contracts
+          path: result/bin/test-runtime-simple-contracts
+
       - run: nix flake check
       - run: nix flake metadata
       - run: nix flake show
